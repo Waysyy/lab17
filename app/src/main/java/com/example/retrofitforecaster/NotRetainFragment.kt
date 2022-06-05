@@ -7,8 +7,8 @@ import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.fragment.app.Fragment
 import androidx.room.Room
+import com.google.android.material.snackbar.Snackbar
 
-var cityVal = ""
 class NotRetainFragment : Fragment( ) {
     private val API_KEY = "a1bdf2e4609febbedaf0fcc823e3d527"
     lateinit var items: Temperatures

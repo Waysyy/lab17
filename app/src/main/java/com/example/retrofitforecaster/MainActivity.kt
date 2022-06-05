@@ -89,6 +89,8 @@ private var coordY = ""
                     coordY = corddao.getY()
                     val cordGet: List<Coordinate> = corddao.getAll()
                     Log.e("BASETEST", cordGet.toString())
+
+
                 }
             }
 
@@ -99,14 +101,17 @@ private var coordY = ""
                     .commit()
 
             }
-            CoroutineScope(Dispatchers.Main).launch {delay(500)
-                if (!starting)//не робит
+            CoroutineScope(Dispatchers.Main).launch {
+                delay(5000)
+                if (starting == false)// робит
                 {
                     snack.show()
                 }
-                items = notRetainFragment.getWeatherResponse(coordX,coordY)
-                withContext(Dispatchers.Main) {
-                    adapter.submitList(items.list)
+                else {
+                    items = notRetainFragment.getWeatherResponse(coordX, coordY)
+                    withContext(Dispatchers.Main) {
+                        adapter.submitList(items.list)
+                    }
                 }
             }
 
