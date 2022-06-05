@@ -22,7 +22,12 @@ class NotRetainFragment : Fragment( ) {
 
         Log.e("TESSSST", lon)
         Log.e("TESSSST", lat)
-        items = forecastApiService.getHourlyForecastForNextDays(lat, lon, API_KEY)
+        if (lon == "")
+        {
+            items = forecastApiService.getHourlyForecastForNextDays("0", "0", API_KEY)
+        }
+
+            items = forecastApiService.getHourlyForecastForNextDays(lat, lon, API_KEY)
 
             Log.e("", "items = $items")
 

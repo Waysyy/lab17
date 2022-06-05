@@ -19,6 +19,9 @@ interface CordDao {
     @Query("SELECT y FROM Coordinate_data")
     fun getY(): String
 
+    @Update(onConflict = OnConflictStrategy.IGNORE)
+    fun update(cord: Coordinate)
+
 }
 /*
 @Dao

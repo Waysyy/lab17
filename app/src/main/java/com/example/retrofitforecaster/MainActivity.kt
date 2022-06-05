@@ -27,14 +27,7 @@ private var starting = true
 private var coordX = ""
 private var coordY = ""
 
-    private val requestMultiplePermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions())
-    { permissions ->
-        permissions.entries.forEach {
-            Log.e("DEBUG", "${it.key} = ${it.value}")
-            starting = it.value
-            Log.e("DEBUG", starting.toString())
-        }
-    }
+
     private lateinit var notRetainFragment: NotRetainFragment
     lateinit var items: Temperatures
 
@@ -43,6 +36,7 @@ private var coordY = ""
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         val parentLayout: View = findViewById(R.id.content)
+
         val snack = Snackbar.make(parentLayout,"I don't have permissions",Snackbar.LENGTH_LONG)
         val adapter = WeatherAdapter()
 
@@ -50,6 +44,19 @@ private var coordY = ""
             applicationContext,
             AppDatabase::class.java, "cordDao"
         ).allowMainThreadQueries().build()
+
+        val requestMultiplePermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions())
+        { permissions ->
+            permissions.entries.forEach {
+                Log.e("DEBUG", "${it.key} = ${it.value}")
+                starting = it.value
+                Log.e("DEBUG", starting.toString())
+                if (!starting)// робит
+                {
+                    snack.show()
+                }
+            }
+        }
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         Log.e("GPS", fusedLocationClient.toString())
@@ -71,28 +78,6 @@ private var coordY = ""
             )
 
         }
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener { location : Location? ->
-                if (location != null) {
-                    Log.e("LOCATION", location.latitude.toString())
-                    Log.e("LOCATION", location.longitude.toString())
-                    var lat = location.latitude.toString()
-                    var  lon = location.longitude.toString()
-
-                    val corddao = db.cordDao()
-                    val newNote = Coordinate(lat ?: "", lon ?: "")
-
-                    GlobalScope.launch {
-                            corddao.insertAll(cord = newNote)
-                    }
-                    coordX = corddao.getX()
-                    coordY = corddao.getY()
-                    val cordGet: List<Coordinate> = corddao.getAll()
-                    Log.e("BASETEST", cordGet.toString())
-
-
-                }
-            }
 
         if (savedInstanceState == null) {
             notRetainFragment = NotRetainFragment().apply {
@@ -103,11 +88,46 @@ private var coordY = ""
             }
             CoroutineScope(Dispatchers.Main).launch {
                 delay(5000)
-                if (starting == false)// робит
-                {
-                    snack.show()
-                }
-                else {
+                fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location : Location? ->
+                        if (location != null) {
+                            Log.e("LOCATION", location.latitude.toString())
+                            Log.e("LOCATION", location.longitude.toString())
+                            var lat = location.latitude.toString()
+                            var  lon = location.longitude.toString()
+
+                            val corddao = db.cordDao()
+
+                            coordX = corddao.getX()
+                            coordY = corddao.getY()
+                            val cordGet: List<Coordinate> = corddao.getAll()
+                           if(coordX == "" || coordX != lat || coordY == "" || coordY != lon)
+                            {
+                                val newNote = Coordinate(lat ?: "", lon ?: "")
+                                GlobalScope.launch {
+                                    corddao.update(cord = newNote)
+                                }
+                            }
+                            if(cordGet.isEmpty())
+                            {
+                                val newNote = Coordinate(lat ?: "", lon ?: "")
+                                GlobalScope.launch {
+                                    corddao.insertAll(cord = newNote)
+                                }
+                            }
+
+                            coordX = corddao.getX()
+                            coordY = corddao.getY()
+
+
+                            Log.e("BASETEST", cordGet.toString())
+
+
+                        }
+                    }
+
+                delay(3000)
+                if (starting == true && coordX != "") {
                     items = notRetainFragment.getWeatherResponse(coordX, coordY)
                     withContext(Dispatchers.Main) {
                         adapter.submitList(items.list)
@@ -134,11 +154,6 @@ private var coordY = ""
                 this@MainActivity, DividerItemDecoration.VERTICAL)
             )
         }
-
     }
-
-
-
-
 }
 
